@@ -118,6 +118,44 @@ public class CompanyServices {
     }
 
     @Path("department")
+    @PUT
+    @Produces("application/json")
+    @Consumes("application/json")
+    public String insertDepartment(
+            @QueryParam("company") String department
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Department departments = j.fromJson(department, Department.class);
+        String company  = departments.getCompany();
+        String deptName  = departments.getDeptName();
+        String deptNo  = departments.getDeptNo();
+        String location  = departments.getLocation();
+        int DeptId = departments.getId();
+
+        Department ndepartment = data.getDepartment(company,DeptId);
+        if(ndepartment == null){
+            data.insertDepartment(departments);
+            if (departments.getId() > 0) {
+                j.toJson(departments);
+            }
+            else{
+                m.setError( "cannot insert ");
+            }
+        }
+        else{
+            m.setError( "department already exists ");
+        }
+
+
+
+        return j.toJson(m);
+    }
+
+    @Path("department")
     @POST
     @Produces("application/json")
     @Consumes("application/json")
@@ -138,18 +176,18 @@ public class CompanyServices {
         for(Department d : cdepartment ){
             if(d.getDeptNo() == deptNo && d.getCompany()== company ){
 
-                 m.setError( company+" with deptNo"+deptNo +" and "+"  exists");
+                m.setError( company+" with deptNo"+deptNo +" and "+"  exists");
                 return j.toJson(m);
             }
         }
         Department updatedDepartments = data.updateDepartment(departments);
-        return company;
+        m.setSuccess(updatedDepartments.toString() );
+        return j.toJson(m);
     }
-
     public static void main(String args[]) {
 
         CompanyServices cs = new CompanyServices();
-       System.out.println( cs.getAllDepartment("pr3044"));
+       System.out.println( cs.updateDepartment("pr3044"));
     }
 
 }
