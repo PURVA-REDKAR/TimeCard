@@ -184,10 +184,23 @@ public class CompanyServices {
         m.setSuccess(updatedDepartments.toString() );
         return j.toJson(m);
     }
-    public static void main(String args[]) {
 
-        CompanyServices cs = new CompanyServices();
-       System.out.println( cs.updateDepartment("pr3044"));
+    @Path("department")
+    @DELETE
+    @Produces("application/json")
+    @Consumes("application/json")
+    public String deleteDepartment(
+            @QueryParam("company") String company,
+            @QueryParam("dept_id") int dept_id
+    ){
+        int deleted = data.deleteDepartment(company,dept_id);
+        if (deleted >= 1) {
+            m.setSuccess("Department"+dept_id+" from "+company+" deleted.");
+         } else {
+            m.setError("Department not deleted");
+         }
+        return j.toJson(m);
     }
+
 
 }
