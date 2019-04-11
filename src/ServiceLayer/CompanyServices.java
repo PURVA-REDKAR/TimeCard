@@ -98,7 +98,7 @@ public class CompanyServices {
     @Produces("application/json")
     @Consumes("text/plain")
     public String getAllDepartment(
-            @QueryParam("company") String company,
+            @QueryParam("company") String company
     ){
         try {
             data = new DataLayer("production");
@@ -116,10 +116,40 @@ public class CompanyServices {
         }
 
     }
+
+    @Path("department")
+    @POST
+    @Produces("application/json")
+    @Consumes("application/json")
+    public String updateDepartment(
+            @QueryParam("company") String department
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Department departments = j.fromJson(department, Department.class);
+        String company  = departments.getCompany();
+        String deptName  = departments.getDeptName();
+        String deptNo  = departments.getDeptNo();
+        String location  = departments.getLocation();
+        List<Department> cdepartment = data.getAllDepartment(company);
+        for(Department d : cdepartment ){
+            if(d.getDeptNo() == deptNo && d.getCompany()== company ){
+
+                 m.setError( company+" with deptNo"+deptNo +" and "+"  exists");
+                return j.toJson(m);
+            }
+        }
+        Department updatedDepartments = data.updateDepartment(departments);
+        return company;
+    }
+
     public static void main(String args[]) {
 
         CompanyServices cs = new CompanyServices();
-       System.out.println( cs.getDepartment("pr3044",700));
+       System.out.println( cs.getAllDepartment("pr3044"));
     }
 
 }
