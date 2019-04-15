@@ -4,8 +4,14 @@ package ServiceLayer;
 import companydata.DataLayer;
 import companydata.Department;
 import com.google.gson.Gson;
+import companydata.Employee;
 
+import java.util.Calendar;
+import java.util.Date;
 import javax.ws.rs.*;
+
+
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 class Message{
@@ -93,7 +99,7 @@ public class CompanyServices {
 
     }
 
-    @Path("department")
+    @Path("departments")
     @GET
     @Produces("application/json")
     @Consumes("text/plain")
@@ -188,7 +194,6 @@ public class CompanyServices {
     @Path("department")
     @DELETE
     @Produces("application/json")
-    @Consumes("application/json")
     public String deleteDepartment(
             @QueryParam("company") String company,
             @QueryParam("dept_id") int dept_id
@@ -203,4 +208,188 @@ public class CompanyServices {
     }
 
 
+    @Path("employee")
+    @GET
+    @Produces("application/json")
+    @Consumes("text/plain")
+    public String getEmployee(
+            @QueryParam("emp_id") int emp_id
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Employee employee = data.getEmployee(emp_id);
+        if(employee == null){
+            m.setError( "Employee with  department id "+emp_id+" does not exists");
+            return j.toJson(m);
+        }
+        else{
+
+            return j.toJson(employee);
+        }
+
+    }
+
+    @Path("employees")
+    @GET
+    @Produces("application/json")
+    @Consumes("text/plain")
+    public String getAllEmployee(
+            @QueryParam("company") String company
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<Employee> employees = data.getAllEmployee(company);
+        if(employees.size() == 0){
+            m.setError( company+" does not exists");
+            return j.toJson(m);
+        }
+        else{
+
+            return j.toJson(employees);
+        }
+
+    }
+
+
+    @Path("employee")
+    @POST
+    @Produces("application/json")
+    @Consumes("application/json")
+    public String insertEmployee(
+            @QueryParam("company") String employee
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Employee employees = j.fromJson(employee, Employee.class);
+
+         String emp_name = employees.getEmpName();
+         String emp_no = employees.getEmpNo();
+         Date hire_date = employees.getHireDate();
+         String job = employees.getJob();
+         Double salary = employees.getSalary();
+         int dept_id = employees.getDeptId();
+         int mng_id = employees.getMngId();
+
+         Department dept = data.getDepartment("pr3044",dept_id);
+         if(dept == null){
+
+             m.setError( "Department with  department id "+dept_id+" does not exists for company pr3044");
+             return j.toJson(m);
+
+         }
+        Employee emp = data.getEmployee(mng_id);
+         if(emp == null){
+             m.setError( "Manager with  employee id "+mng_id+" does not exists");
+             return j.toJson(m);
+         }
+
+        if (!(hire_date).before(new Date()) || !hire_date.equals(new Date())){
+
+            m.setError( hire_date+" hire date should be before today's date");
+            return j.toJson(m);
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(hire_date);
+        int day = cal.get(Calendar.DAY_OF_WEEK);
+        if(day == 0 || day == 7){
+            m.setError( hire_date+" hire day  cannot be saturday or sunday");
+            return j.toJson(m);
+        }
+        employees.setId(30444);
+
+         emp = data.insertEmployee(employees);
+        if (emp.getId() > 0) {
+           return j.toJson(emp);
+        } else {
+            return j.toJson("error while inserting record");
+        }
+    }
+
+    @Path("employee")
+    @PUT
+    @Produces("application/json")
+    public String UpdateEmployee(
+            @FormParam("emp_id") int emp_id,
+            @FormParam("emp_name") String emp_name,
+            @FormParam("emp_no") String emp_no,
+            @FormParam("hire_date") Date hire_date,
+            @FormParam("job") String job,
+            @FormParam("salary") Double salary,
+            @FormParam("dept_id") int dept_id,
+            @FormParam("mng_id") int mng_id
+       ){
+
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        Department dept = data.getDepartment("pr3044",dept_id);
+        if(dept == null){
+
+            m.setError( "Department with  department id "+dept_id+" does not exists for company pr3044");
+            return j.toJson(m);
+
+        }
+        Employee emp = data.getEmployee(mng_id);
+        if(emp == null){
+            m.setError( "Manager with  employee id "+mng_id+" does not exists");
+            return j.toJson(m);
+        }
+
+        if (!(hire_date).before(new Date()) || !hire_date.equals(new Date())){
+
+            m.setError( hire_date+" hire date should be before today's date");
+            return j.toJson(m);
+        }
+
+         emp = data.getEmployee(emp_id);
+        if(emp == null){
+            m.setError( " employee id "+emp_id+" does not exists");
+            return j.toJson(m);
+        }
+        emp.setId(emp_id);
+        emp.setEmpName(emp_name);
+        emp.setEmpNo(emp_no);
+        emp.setHireDate((java.sql.Date) hire_date);
+        emp.setSalary(salary);
+        emp.setMngId(mng_id);
+        emp.setDeptId(dept_id);
+        emp.setJob(job);
+        emp = data.updateEmployee(emp);
+        if(emp == null){
+            m.setError( "could not update");
+            return j.toJson(m);
+        }
+
+         return j.toJson(emp);
+    }
+    @Path("employee")
+    @DELETE
+    @Produces("application/json")
+    public String deleteEmployee(
+            @QueryParam("emp_id") int emp_id
+    ){
+        int deleted = data.deleteEmployee(emp_id);
+        if (deleted >= 1) {
+            m.setSuccess("Employee "+emp_id+" deleted.");
+        } else {
+            m.setError("Department not deleted");
+        }
+        return j.toJson(m);
+
+    }
+
 }
+
