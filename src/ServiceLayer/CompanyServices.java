@@ -5,7 +5,9 @@ import companydata.DataLayer;
 import companydata.Department;
 import com.google.gson.Gson;
 import companydata.Employee;
+import companydata.Timecard;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import javax.ws.rs.*;
@@ -77,7 +79,6 @@ public class CompanyServices {
     @Path("department")
     @GET
     @Produces("application/json")
-    @Consumes("text/plain")
     public String getDepartment(
              @QueryParam("company") String company,
              @QueryParam("dept_id") int dept_id
@@ -102,7 +103,6 @@ public class CompanyServices {
     @Path("departments")
     @GET
     @Produces("application/json")
-    @Consumes("text/plain")
     public String getAllDepartment(
             @QueryParam("company") String company
     ){
@@ -126,9 +126,8 @@ public class CompanyServices {
     @Path("department")
     @PUT
     @Produces("application/json")
-    @Consumes("application/json")
     public String insertDepartment(
-            @QueryParam("company") String department
+            @FormParam("company") String department
     ){
         try {
             data = new DataLayer("production");
@@ -235,7 +234,6 @@ public class CompanyServices {
     @Path("employees")
     @GET
     @Produces("application/json")
-    @Consumes("text/plain")
     public String getAllEmployee(
             @QueryParam("company") String company
     ){
@@ -388,6 +386,79 @@ public class CompanyServices {
             m.setError("Department not deleted");
         }
         return j.toJson(m);
+
+    }
+
+    @Path("timecards")
+    @GET
+    @Produces("application/json")
+    @Consumes("text/plain")
+    public String getAllTimecards(
+            @QueryParam("emp_id") int emp_id
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<Timecard> Timecards = data.getAllTimecard(emp_id);
+        if(Timecards.size() == 0){
+            m.setError( emp_id+" does not exists");
+            return j.toJson(m);
+        }
+        else{
+
+            return j.toJson(Timecards);
+        }
+
+    }
+
+    @Path("timecard")
+    @POST
+    @Produces("application/json")
+    @Consumes("application/json")
+    public String insertTimecard(
+            @QueryParam("company") String timecards
+    ){
+        try {
+            data = new DataLayer("production");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Timecard timecard = j.fromJson(timecards, Timecard.class);
+
+
+        int timecard_id = timecard.getId();
+        Timestamp start_time = timecard.getStartTime();
+        Timestamp end_time = timecard.getEndTime();
+        int emp_id = timecard.getId();
+
+        Employee emp = data.getEmployee(emp_id);
+        if(emp == null){
+            m.setError( " employee id "+emp_id+" does not exists");
+            return j.toJson(m);
+        }
+        Timecard t = data.insertTimecard(timecard);
+
+
+        return j.toJson(t);
+
+    }
+
+    @Path("timecard")
+    @POST
+    @Produces("application/json")
+    public String updateTimecard(
+            @FormParam("timecard_id") int timecard_id,
+            @FormParam("emp_id") int emp_id,
+            @FormParam("start_time") String start_time,
+            @FormParam("end_time") String end_time
+    ){
+
+
+
+
+        return "";
 
     }
 
