@@ -127,37 +127,38 @@ public class CompanyServices {
     @PUT
     @Produces("application/json")
     public String insertDepartment(
-            @FormParam("company") String department
+            @FormParam("dept_id") int dept_id,
+            @FormParam("company") String company,
+            @FormParam("dept_name") String dept_name,
+            @FormParam("dept_no") String dept_no,
+            @FormParam("location") String location
     ){
         try {
             data = new DataLayer("production");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Department departments = j.fromJson(department, Department.class);
-        String company  = departments.getCompany();
-        String deptName  = departments.getDeptName();
-        String deptNo  = departments.getDeptNo();
-        String location  = departments.getLocation();
-        int DeptId = departments.getId();
+        Department departments = new Department(company,dept_name,dept_no,location);
 
-        Department ndepartment = data.getDepartment(company,DeptId);
+        Department ndepartment = data.getDepartment(company,dept_id);
         if(ndepartment == null){
-            data.insertDepartment(departments);
+            departments = data.insertDepartment(departments);
             if (departments.getId() > 0) {
                 j.toJson(departments);
             }
             else{
                 m.setError( "cannot insert ");
+                return j.toJson(m);
             }
         }
         else{
             m.setError( "department already exists ");
+            return j.toJson(m);
         }
 
 
 
-        return j.toJson(m);
+        return j.toJson(departments);
     }
 
     @Path("department")
@@ -172,7 +173,7 @@ public class CompanyServices {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Department departments = j.fromJson(department, Department.class);
+       Department departments = j.fromJson(department, Department.class);
         String company  = departments.getCompany();
         String deptName  = departments.getDeptName();
         String deptNo  = departments.getDeptNo();
@@ -185,7 +186,7 @@ public class CompanyServices {
                 return j.toJson(m);
             }
         }
-        Department updatedDepartments = data.updateDepartment(departments);
+        Department updatedDepartments = data.insertDepartment(departments);
         m.setSuccess(updatedDepartments.toString() );
         return j.toJson(m);
     }
