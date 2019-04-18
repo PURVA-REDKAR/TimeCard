@@ -186,7 +186,6 @@ public class CompanyServices {
     ){
         try {
             data = new DataLayer("production");
-            Gson j = new Gson();
             Department departments = j.fromJson(department, Department.class);
             String company  = departments.getCompany();
             String deptName  = departments.getDeptName();
@@ -394,7 +393,6 @@ public class CompanyServices {
             if(hire_date != null) {
                  hire_dates = new SimpleDateFormat("yyyy-MM-dd").parse(hire_date);
 
-                long time2 = System.currentTimeMillis();
                 current_date = new Date();
 
 
@@ -555,13 +553,17 @@ public class CompanyServices {
     @PUT
     @Produces("application/json")
     public String updateTimecard(
+      //      int timecard_id,int emp_id,String start_time,String end_time
             @FormParam("timecard_id") int timecard_id,
             @FormParam("emp_id") int emp_id,
             @FormParam("start_time") String start_time,
             @FormParam("end_time") String end_time
     ){
 
-       List<Employee> emp = data.getAllEmployee("pr3044");
+        try {
+            data = new DataLayer("production");
+
+        List<Employee> emp = data.getAllEmployee("pr3044");
 
         int flag =0;
         for(Employee d : emp ){
@@ -576,10 +578,84 @@ public class CompanyServices {
             return j.toJson(m);
         }
         try {
-            data = new DataLayer("production");
+
             Timestamp start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
             Timestamp end_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(end_time).getTime());
+            Date current_date = new Date();
+            Calendar c = Calendar.getInstance();
 
+//            Date sdate = new Date(start_time_t.getTime());
+//            Date edate = new Date(end_time_t.getTime());
+//            if(! sdate.equals(edate)){
+//                m.setError( "start date "+sdate+" not equals to end date "+edate);
+//                return j.toJson(m);
+//            }
+
+            c.setTime(start_time_t);
+             c.add(Calendar.HOUR_OF_DAY, 1);
+
+            if(end_time_t.before(start_time_t)){
+                m.setError( "end time should be before start time ");
+                return j.toJson(m);
+            }
+            c.setTime(current_date);
+            c.add(Calendar.DATE, -7);
+                if (start_time_t.after(c.getTime()) && start_time_t.before(current_date)) {
+                    c.setTime(start_time_t);
+                    int week = c.get(Calendar.DAY_OF_WEEK);
+
+                    if (week != 1 && week != 7) {
+                        c.setTime(end_time_t);
+                        int week_e = c.get(Calendar.DAY_OF_WEEK);
+                        if (week != 0 && week != 7) {
+                            List<Timecard> timecards = data.getAllTimecard(emp_id) ;
+                            start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
+                            for(Timecard time : timecards ){
+                                if(time.getStartTime() == start_time_t){
+                                    m.setError( start_time_t+" already present ");
+                                    return j.toJson(m);
+                                }
+                            }
+
+                            Timecard timecard1 = data.getTimecard(timecard_id);
+                            if(timecard1 == null){
+                                m.setError( "Please cheack "+timecard_id);
+                                return j.toJson(m);
+                            }
+                            timecard1.setEmpId(emp_id);
+                             start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
+                             end_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(end_time).getTime());
+
+                            timecard1.setEndTime(end_time_t);
+                            timecard1.setStartTime(start_time_t);
+                            timecard1 = data.updateTimecard(timecard1);
+                            return j.toJson(timecard1);
+
+
+                        }
+                        else{
+                            m.setError( " day should not be sunday or saturday ");
+                            return j.toJson(m);
+
+                        }
+
+                    }
+                    else{
+                        m.setError( " day should not be sunday or saturday ");
+                        return j.toJson(m);
+
+                    }
+
+                }
+                else{
+                    m.setError( "start_time must be before either equal to current date or  up to 1 week ago from the current date ");
+                    return j.toJson(m);
+                }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -617,7 +693,8 @@ public class CompanyServices {
 //        CompanyServices cs = new CompanyServices();
 //      //  String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
 //      //  System.out.println(cs.insertDepartment(jk));
-//        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
+//       // System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
+//        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
 //    }
 
 }
