@@ -635,7 +635,6 @@ public class CompanyServices {
                     timecard = data.insertTimecard(timecard);
                     return j.toJson(timecard);
 
-
                 }
                 else{
                     m.setError( " day should not be sunday or saturday ");
@@ -812,20 +811,20 @@ public class CompanyServices {
 
         return j.toJson(m);
     }
-    public static void main(String args[]) {
-
-
-         CompanyServices cs = new CompanyServices();
-        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 12, 2019 11:30:00 AM\",\"end_time\":\"Apr 12, 2019 18:30:00 AM\"}";
-        System.out.println(cs.insertTimecard(jk));
-//         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
-////        System.out.println( cs.insertDepartment(jk));
-////        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
-////        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
-////
-////        String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
-////        System.out.println(cs.insertEmployee(jk));
-    }
+//    public static void main(String args[]) {
+//
+//
+//         CompanyServices cs = new CompanyServices();
+//        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 12, 2019 11:30:00 AM\",\"end_time\":\"Apr 12, 2019 18:30:00 AM\"}";
+//        System.out.println(cs.insertTimecard(jk));
+////         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
+//////        System.out.println( cs.insertDepartment(jk));
+//////        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
+//////        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
+//////
+//////        String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
+//////        System.out.println(cs.insertEmployee(jk));
+//    }
 
 }
 
