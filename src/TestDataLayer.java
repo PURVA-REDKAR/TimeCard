@@ -19,7 +19,7 @@ public class TestDataLayer {
 //            //Department
 //
 //            // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks
-//            Department dept = new Department("pr3044","IT","3044","rochester");
+//            Department dept = new Department("pr3044","CS","3144","rochester");
 //            dept = dl.insertDepartment(dept);
 //            if (dept.getId() > 0) {
 //                System.out.println("inserted id: "+ dept.getId());
@@ -74,14 +74,14 @@ public class TestDataLayer {
          //Employee
          
 //        // REMEMBER: USE AN ID FOR your department in place of '4' and manager id must exist as an employee
-//         Employee emp = new Employee("purva","pu34", new java.sql.Date(new java.util.Date().getTime()),"Developer",80000.00, 298, 4);
+//         Employee emp = new Employee("purva12","pur34", new java.sql.Date(new java.util.Date().getTime()),"Developer",80000.00, 298, 4);
 //         emp = dl.insertEmployee(emp);
 //         if (emp.getId() > 0) {
 //            System.out.println("inserted id: "+ emp.getId());
 //         } else {
 //            System.out.println("Not inserted");
 //         }
-//
+
 //
 //         // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks
 //         List<Employee> employees = dl.getAllEmployee("pr3044");
@@ -140,20 +140,20 @@ public class TestDataLayer {
 
          //Timecard
          
-//         Timestamp startTime = new Timestamp(new Date().getTime());
+          Timestamp startTime = new Timestamp(new Date().getTime());
           Calendar cal = Calendar.getInstance();
-//         cal.setTimeInMillis(startTime.getTime());
-//         cal.add(Calendar.HOUR, 5);
+          cal.setTimeInMillis(startTime.getTime());
+          cal.add(Calendar.HOUR, 5);
 //
 //         //REMBEMBER: employee must exist
-//         Timecard tc = new Timecard(startTime,
-//                  new Timestamp(cal.getTime().getTime()),263);
-//         tc = dl.insertTimecard(tc);
-//         if (tc.getId() > 0) {
-//            System.out.println("inserted id: "+ tc.getId());
-//         } else {
-//            System.out.println("Not inserted");
-//         }
+           Timecard tc = new Timecard(startTime,
+                   new Timestamp(cal.getTime().getTime()),263);
+           tc = dl.insertTimecard(tc);
+          if (tc.getId() > 0) {
+             System.out.println("inserted id: "+ tc.getId());
+          } else {
+             System.out.println("Not inserted");
+         }
 //
 //
 //         List<Timecard> timecards = dl.getAllTimecard(263);
@@ -166,25 +166,25 @@ public class TestDataLayer {
 //            System.out.println("--------\n\n");
 //         }
 
-         Timecard timecard = dl.getTimecard(136);
-         System.out.println("\n\nCurrent Timecard:");
-         System.out.println(timecard.getId());
-         System.out.println(timecard.getStartTime());
-         System.out.println(timecard.getEndTime());
-         System.out.println(timecard.getEmpId());
-         System.out.println("--------\n\n");
-
-         cal.setTimeInMillis(timecard.getStartTime().getTime());
-         cal.add(Calendar.HOUR, 8);
-         timecard.setEndTime(new Timestamp(cal.getTime().getTime()));
-         timecard = dl.updateTimecard(timecard);
-
-         System.out.println("\n\nUpdated Timecard:");
-         System.out.println(timecard.getId());
-         System.out.println(timecard.getStartTime());
-         System.out.println(timecard.getEndTime());
-         System.out.println(timecard.getEmpId());
-         System.out.println("--------\n\n");
+//         Timecard timecard = dl.getTimecard(136);
+//         System.out.println("\n\nCurrent Timecard:");
+//         System.out.println(timecard.getId());
+//         System.out.println(timecard.getStartTime());
+//         System.out.println(timecard.getEndTime());
+//         System.out.println(timecard.getEmpId());
+//         System.out.println("--------\n\n");
+//
+//         cal.setTimeInMillis(timecard.getStartTime().getTime());
+//         cal.add(Calendar.HOUR, 8);
+//         timecard.setEndTime(new Timestamp(cal.getTime().getTime()));
+//         timecard = dl.updateTimecard(timecard);
+//
+//         System.out.println("\n\nUpdated Timecard:");
+//         System.out.println(timecard.getId());
+//         System.out.println(timecard.getStartTime());
+//         System.out.println(timecard.getEndTime());
+//         System.out.println(timecard.getEmpId());
+//         System.out.println("--------\n\n");
 //
 //         //REMEMBER: timecard id must exist
 //         int deletedTC = dl.deleteTimecard(1);
