@@ -1,23 +1,19 @@
 package ServiceLayer;
 // JAX-RS: Java API for REST Service
 
+import com.google.gson.Gson;
 import companydata.DataLayer;
 import companydata.Department;
-import com.google.gson.Gson;
 import companydata.Employee;
 import companydata.Timecard;
 
-
+import javax.ws.rs.*;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
-import javax.ws.rs.*;
-
-
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 class Message{
@@ -47,49 +43,48 @@ class Message{
 @Path("CompanyServices")
 public class CompanyServices {
 
-    Department dept = new Department();
+    Department dept = new Department( );
     DataLayer data = null;
-    Gson j = new Gson();
-    Message m = new Message();
+    Gson j = new Gson( );
+    Message m = new Message( );
 
-    @Path("company")
+    @Path( "company" )
     @DELETE
-    @Produces("application/json")
-    public String deleteCompany(
-            @QueryParam("company") String company
-    ){
-        dept.setDeptName(company);
+    @Produces( "application/json" )
+    public String deleteCompany (
+            @QueryParam( "company" ) String company
+    ) {
+        dept.setDeptName( company );
         try {
-            if(company.equals(null)){
-                m.setError("company cannot be null ");
-                return j.toJson(m);
+            if ( company.equals( null ) ) {
+                m.setError( "company cannot be null " );
+                return j.toJson( m );
             }
-            data = new DataLayer("production");
+            data = new DataLayer( "production" );
             //Get all employess to delete that belong to the company
-            List<Employee> employees = data.getAllEmployee(company);
-            for(Employee employe :employees){
+            List <Employee> employees = data.getAllEmployee( company );
+            for ( Employee employe : employees ) {
                 //Before deleting the employee delete the employess Time card
-                List<Timecard> timecards = data.getAllTimecard(employe.getId());
-                 for(Timecard timecard : timecards){
-                     data.deleteTimecard(timecard.getId());
-                 }
-                 //Delete the Employee
-                data.deleteEmployee(employe.getId());
+                List <Timecard> timecards = data.getAllTimecard( employe.getId( ) );
+                for ( Timecard timecard : timecards ) {
+                    data.deleteTimecard( timecard.getId( ) );
+                }
+                //Delete the Employee
+                data.deleteEmployee( employe.getId( ) );
             }
             //Delete the company
-            int rows = data.deleteCompany(company);
-            if (rows <= 0) {
-               //if deletion was not possible
-               m.setError( company+" does not exists");
-            }
-            else {
+            int rows = data.deleteCompany( company );
+            if ( rows <= 0 ) {
+                //if deletion was not possible
+                m.setError( company + " does not exists" );
+            } else {
                 //if deletion was sucessfull
-                m.setSuccess(company + " information deleted");
+                m.setSuccess( company + " information deleted" );
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch ( Exception e ) {
+            e.printStackTrace( );
         }
-        return j.toJson(m);
+        return j.toJson( m );
     }
 
     @Path("department")
@@ -100,17 +95,28 @@ public class CompanyServices {
              @QueryParam("dept_id") int dept_id
     ){
         try {
-            data = new DataLayer("production");
+            //Validate Query Params
+            if ( company.equals( null ) ) {
+                m.setError( "company cannot be null " );
+                return j.toJson( m );
+            }
+            if ( dept_id == 0 ) {
+                m.setError( "dept_id cannot be 0 " );
+                return j.toJson( m );
+            }
+            //initialize Data Layer
+            data = new DataLayer( "production" );
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //Get Departments
         Department department = data.getDepartment(company,dept_id);
         if(department == null){
              m.setError( company+" with  department id "+dept_id+" does not exists");
-            return j.toJson(m);
+            return j.toJson( m );
         }
         else{
-
+            m.setSuccess( department.toString( ) );
             return j.toJson(department);
         }
 
@@ -123,10 +129,16 @@ public class CompanyServices {
             @QueryParam("company") String company
     ){
         try {
+            //Validate Query Params
+            if ( company.equals( null ) ) {
+                m.setError( "company cannot be null " );
+                return j.toJson( m );
+            }
             data = new DataLayer("production");
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //GET aLL Departments that belong to the comapany
         List<Department> departments = data.getAllDepartment(company);
         if(departments.size() == 0){
             m.setError( company+" does not exists");
@@ -150,43 +162,50 @@ public class CompanyServices {
             @FormParam("location") String location
     ){
 
+        if ( company.equals( null ) ) {
+            m.setError( "Company  cannot be null " );
+            return j.toJson( m );
+        }
+        if ( dept_id == 0 ) {
+            m.setError( "dept_id  cannot be null " );
+            return j.toJson( m );
+        }
         try {
 
-
+            //initialize Data Layer
             data = new DataLayer("production");
-
+            //GET the department
             Department departments = data.getDepartment(company,dept_id);
             if(departments == null){
                   m.setError( "department doesnt  exists ");
                   return j.toJson(m);
             }
-
-            departments.setDeptName(dept_name);
-            departments.setDeptNo(dept_no);
-            departments.setCompany(company);
-            departments.setLocation(location);
+            //set the variable that are required to update
+            if ( !dept_name.equals( null ) ) {
+                departments.setDeptName( dept_name );
+            }
+            if ( !dept_no.equals( null ) ) {
+                departments.setDeptNo( dept_no );
+            }
+            if ( !company.equals( null ) ) {
+                departments.setCompany( company );
+            }
+            if ( !location.equals( null ) ) {
+                departments.setLocation( location );
+            }
 
             departments = data.updateDepartment(departments);
-
+            //Check if updation was Success
            if (departments.getId() > 0) {
-
                 return j.toJson(departments);
-
-           }
-
-        else{
+           } else {
                 m.setError( "cannot insert ");
                 return j.toJson(m);
-
-        }
-
+           }
 
         } catch (Exception e) {
-            return "Exception";
-
+            return "Form Params Missing Exception";
         }
-
-
     }
 
     @Path("department")
@@ -196,14 +215,38 @@ public class CompanyServices {
     public String insertDepartment(
             String department
     ){
+        //Validate if JSON is present
+        if ( department.equals( null ) ) {
+            m.setError( "Input cannot be null " );
+            return j.toJson( m );
+        }
         try {
+            // initialize DATA layer
             data = new DataLayer("production");
+            //Extract JSON to variables
             Department departments = j.fromJson(department, Department.class);
+
             String company  = departments.getCompany();
+            if ( company.equals( null ) ) {
+                m.setError( "Company cannot be null " );
+                return j.toJson( m );
+            }
             String deptName  = departments.getDeptName();
+            if ( deptName.equals( null ) ) {
+                m.setError( "deptName cannot be null " );
+                return j.toJson( m );
+            }
             String deptNo  = departments.getDeptNo();
+            if ( deptNo.equals( null ) ) {
+                m.setError( "deptNo cannot be null " );
+                return j.toJson( m );
+            }
             String location  = departments.getLocation();
-            System.out.println(company+"company"+deptName+"deptName"+deptNo+"location"+location);
+            if ( location.equals( null ) ) {
+                m.setError( "location cannot be null " );
+                return j.toJson( m );
+            }
+            //Check if Department Exists for the comapany
             List<Department> cdepartment = data.getAllDepartment(company);
             for(Department d : cdepartment ){
             if(d.getDeptNo().equals(deptNo) ){
@@ -212,10 +255,8 @@ public class CompanyServices {
                 return j.toJson(m);
             }
           }
-
+            //Insert the Department
           Department updatedDepartments = data.insertDepartment(departments);
-            System.out.println(updatedDepartments.getId()+"--no--"+updatedDepartments.getDeptName());
-          //m.setSuccess(updatedDepartments.toString() );
           return j.toJson(updatedDepartments);
 
         } catch (Exception e) {
@@ -234,8 +275,19 @@ public class CompanyServices {
     ){
 
         try {
+            //Validation for Query Params
+            if ( company.equals( null ) ) {
+                m.setError( "Company cannot be null " );
+                return j.toJson( m );
+            }
+            if ( dept_id == 0 ) {
+                m.setError( "dept_id cannot be 0 " );
+                return j.toJson( m );
+            }
+            //Initialize Data Layer
             data = new DataLayer("production");
             int deleted = data.deleteDepartment(company,dept_id);
+            //Check if deletion was Sucessfull
             if (deleted >= 1) {
                 m.setSuccess("Department"+dept_id+" from "+company+" deleted.");
             } else {
