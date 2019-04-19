@@ -48,6 +48,7 @@ public class CompanyServices {
     Gson j = new Gson( );
     Message m = new Message( );
 
+
     @Path( "company" )
     @DELETE
     @Produces( "application/json" )
@@ -91,8 +92,8 @@ public class CompanyServices {
     @GET
     @Produces("application/json")
     public String getDepartment(
-             @QueryParam("company") String company,
-             @QueryParam("dept_id") int dept_id
+            @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company,
+            @QueryParam("dept_id") int dept_id
     ){
         try {
             //Validate Query Params
@@ -126,7 +127,7 @@ public class CompanyServices {
     @GET
     @Produces("application/json")
     public String getAllDepartment(
-            @QueryParam("company") String company
+            @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company
     ){
         try {
             //Validate Query Params
@@ -156,7 +157,7 @@ public class CompanyServices {
     @Produces("application/json")
     public String updateDepartment(
             @FormParam("dept_id") int dept_id,
-            @FormParam("company") String company,
+            @DefaultValue( "pr3044" ) @FormParam( "company" ) String company,
             @FormParam("dept_name") String dept_name,
             @FormParam("dept_no") String dept_no,
             @FormParam("location") String location
@@ -270,7 +271,7 @@ public class CompanyServices {
     @DELETE
     @Produces("application/json")
     public String deleteDepartment(
-            @QueryParam("company") String company,
+            @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company,
             @QueryParam("dept_id") int dept_id
     ){
 
@@ -307,13 +308,21 @@ public class CompanyServices {
     public String getEmployee(
             @QueryParam("emp_id") int emp_id
     ){
+        if ( emp_id == 0 ) {
+            m.setError( "emp_id cannot be 0" );
+            return j.toJson( m );
+
+        }
         try {
+            //initialize Data layer
             data = new DataLayer("production");
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //GET Employees
         Employee employee = data.getEmployee(emp_id);
         if(employee == null){
+            //Error for employee
             m.setError( "Employee with  department id "+emp_id+" does not exists");
             return j.toJson(m);
         }
@@ -328,13 +337,15 @@ public class CompanyServices {
     @GET
     @Produces("application/json")
     public String getAllEmployee(
-            @QueryParam("company") String company
+            @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company
     ){
         try {
+            //Initialize Data Layer
             data = new DataLayer("production");
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //List all the employees
         List<Employee> employees = data.getAllEmployee(company);
         if(employees.size() == 0){
             m.setError( company+" does not exists");
@@ -353,13 +364,20 @@ public class CompanyServices {
     @Produces("application/json")
     @Consumes("application/json")
     public String insertEmployee(String employee){
+        //Validate Employee
+        if ( employee.equals( null ) ) {
+            m.setError( "input  cannot be null" );
+            return j.toJson( m );
+        }
         try {
+            //Initialize Data Layer
             data = new DataLayer("production");
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //Convert employee to json
         Employee employees = j.fromJson(employee, Employee.class);
-
+        //Validate input
          String emp_name = employees.getEmpName();
         if(emp_name == null){
             m.setError( "emp name cannot be null");
@@ -370,9 +388,11 @@ public class CompanyServices {
               m.setError( "emp no cannot be null");
               return j.toJson(m);
          }
+        //Date Conversions
          Date hire_dates1 = employees.getHireDate();
          DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
          String hire_date = df.format(hire_dates1);
+
          String job = employees.getJob();
          if(job == null){
               m.setError( "job cannot be null");
@@ -432,7 +452,7 @@ public class CompanyServices {
             m.setError(" hire date doesnt not exists");
             return j.toJson(m);
         }
-
+        // Insert Employee
          emp = data.insertEmployee(employees);
         if (emp.getId() > 0) {
            return j.toJson(emp);
@@ -446,7 +466,7 @@ public class CompanyServices {
     @Produces("application/json")
     public String UpdateEmployee(
             @FormParam("emp_id") int emp_id,
-            @FormParam("emp_name") String emp_name,
+            @FormParam( "emp_name" ) String emp_name,
             @FormParam("emp_no") String emp_no,
             @FormParam("hire_date") String hire_date,
             @FormParam("job") String job,
@@ -459,7 +479,7 @@ public class CompanyServices {
         try {
             data = new DataLayer("production");
 
-
+            //Validate Inputs
             if(dept_id == 0){
                 m.setError( "department id cannot be 0");
                 return j.toJson(m);
@@ -478,6 +498,7 @@ public class CompanyServices {
                     return j.toJson(m);
                 }
             }
+            //CHECK Dates
             Date hire_dates = null;
             Date current_date = null;
             if(hire_date != null) {
@@ -500,7 +521,6 @@ public class CompanyServices {
             }
             emp = data.getEmployee(emp_id);
 
-            System.out.println(emp.getId());
             if(emp_name != null) {
                 emp.setEmpName(emp_name);
             }
@@ -524,8 +544,9 @@ public class CompanyServices {
             if(job != null) {
                 emp.setJob(job);
             }
+            //Update Employee
             emp = data.updateEmployee(emp);
-            System.out.println(emp);
+
             if(emp == null){
                 m.setError( "could not update");
                 return j.toJson(m);
@@ -537,14 +558,28 @@ public class CompanyServices {
 
         return j.toJson(m);
     }
+
+
     @Path("employee")
     @DELETE
     @Produces("application/json")
     public String deleteEmployee(
             @QueryParam("emp_id") int emp_id
     ){
+        if ( emp_id == 0 ) {
+            m.setError( "Employee cannot be 0" );
+            return j.toJson( m );
+        }
         try {
+            //initialize data layer
             data = new DataLayer("production");
+            //Before deleting the employee delete the employess Time card
+            List <Timecard> timecards = data.getAllTimecard( emp_id );
+            for ( Timecard timecard : timecards ) {
+                data.deleteTimecard( timecard.getId( ) );
+
+            }
+            //Delete Employee
             int deleted = data.deleteEmployee(emp_id);
             if (deleted >= 1) {
                 m.setSuccess("Employee "+emp_id+" deleted.");
@@ -607,6 +642,114 @@ public class CompanyServices {
 
     }
 
+    public String validateTimecard (Timecard timecard, Message m1) {
+
+        // Timecard timecard = j.fromJson( timecards, Timecard.class );
+        Timestamp start_time_t = timecard.getStartTime( );
+        Timestamp end_time_t = timecard.getEndTime( );
+        int emp_id = timecard.getEmpId( );
+        List <Employee> emp = data.getAllEmployee( "pr3044" );
+
+        int flag = 0;
+        for ( Employee d : emp ) {
+            if ( d.getId( ) == emp_id ) {
+                flag = 1;
+            }
+        }
+
+        if ( flag == 0 ) {
+
+            m1.setError( " employee id " + emp_id + " does not exists in pr3044" );
+            return j.toJson( m1 );
+        }
+
+        Date current_date = new Date( );
+        Calendar c = Calendar.getInstance( );
+        Calendar c1 = Calendar.getInstance( );
+        Date sdate = new Date( start_time_t.getTime( ) );
+        c.setTime( sdate );
+        int syear = c.get( Calendar.YEAR );
+        int smonth = c.get( Calendar.MONTH );
+        int sday = c.get( Calendar.DAY_OF_MONTH );
+        int shour = c.get( Calendar.HOUR );
+        Date edate = new Date( end_time_t.getTime( ) );
+        c1.setTime( edate );
+        int eyear = c1.get( Calendar.YEAR );
+        int emonth = c1.get( Calendar.MONTH );
+        int eday = c1.get( Calendar.DAY_OF_MONTH );
+        int ehour = c1.get( Calendar.HOUR );
+        if ( (syear != eyear) || (smonth != emonth) || (sday != eday) ) {
+            m1.setError( "start date " + sdate + " not equals to end date " + edate );
+            return j.toJson( m1 );
+        }
+        if ( shour < 6 || shour > 18 ) {
+            m1.setError( "start hours should be between the hours (in 24 hour format) of 06:00:00 and 18:00:00 " );
+            return j.toJson( m1 );
+
+        }
+        if ( ehour < 6 || ehour > 18 ) {
+            m1.setError( "end hours should be between the hours (in 24 hour format) of 06:00:00 and 18:00:00 " );
+            return j.toJson( m1 );
+
+        }
+        c.setTime( start_time_t );
+        c.add( Calendar.HOUR_OF_DAY, 1 );
+
+        if ( end_time_t.before( start_time_t ) ) {
+            m1.setError( "end time should be before start time " );
+            return j.toJson( m1 );
+        }
+
+        c.setTime( current_date );
+        c.add( Calendar.DATE, -7 );
+
+        if ( start_time_t.after( c.getTime( ) ) && start_time_t.before( current_date ) ) {
+            c.setTime( start_time_t );
+            int week = c.get( Calendar.DAY_OF_WEEK );
+
+            if ( week != 1 && week != 7 ) {
+                c.setTime( end_time_t );
+                int week_e = c.get( Calendar.DAY_OF_WEEK );
+                if ( week != 0 && week != 7 ) {
+                    List <Timecard> timecards1 = data.getAllTimecard( emp_id );
+                    start_time_t = timecard.getStartTime( );
+                    c.setTime( start_time_t );
+                    int styear = c.get( Calendar.YEAR );
+                    int stmonth = c.get( Calendar.MONTH );
+                    int stday = c.get( Calendar.DAY_OF_MONTH );
+
+                    for ( Timecard time : timecards1 ) {
+                        Date itime = new Date( time.getStartTime( ).getTime( ) );
+                        c1.setTime( itime );
+
+                        int eiyear = c1.get( Calendar.YEAR );
+                        int eimonth = c1.get( Calendar.MONTH );
+                        int eiday = c1.get( Calendar.DAY_OF_MONTH );
+                        if ( (eiyear == styear) && (stmonth == eimonth) && (stday == eiday) ) {
+                            m1.setError( start_time_t + " already present " );
+                            return j.toJson( m1 );
+                        }
+                    }
+                } else {
+                    m1.setError( " day should not be sunday or saturday " );
+                    return j.toJson( m1 );
+
+                }
+            } else {
+                m1.setError( " day should not be sunday or saturday " );
+                return j.toJson( m1 );
+
+            }
+        } else {
+            m1.setError( "start_time must be before either equal to current date or  up to 1 week ago from the current date " );
+            return j.toJson( m1 );
+        }
+
+        return "true";
+    }
+
+
+
     @Path("timecard")
     @POST
     @Produces("application/json")
@@ -617,113 +760,41 @@ public class CompanyServices {
            } catch (Exception e) {
              e.printStackTrace();
            }
-           Timecard timecard = j.fromJson(timecards, Timecard.class);
 
-          Timestamp start_time_t = timecard.getStartTime();
-          if(start_time_t == null){
-             m.setError( "start_time  cannot be null");
-             return j.toJson(m);
-         }
 
-        Timestamp end_time_t = timecard.getEndTime();
-        if(end_time_t == null){
-            m.setError( "end_time  cannot be null");
-            return j.toJson(m);
+        Timecard timecard = j.fromJson( timecards, Timecard.class );
+
+        int emp_id = timecard.getEmpId( );
+        if ( emp_id == 0 ) {
+            m.setError( "emp_id  cannot be null" );
+            return j.toJson( m );
         }
-        int emp_id = timecard.getEmpId();
-        if(emp_id == 0){
-            m.setError( "emp_id  cannot be null");
-            return j.toJson(m);
-        }
+        String check = validateTimecard( timecard, new Message( ) );
 
-        List<Employee> emp = data.getAllEmployee("pr3044");
 
-        int flag =0;
-        for(Employee d : emp ){
-            if(d.getId() == emp_id){
-                flag = 1;
+        if ( check.equals( "true" ) ) {
+
+
+            Timestamp start_time_t = timecard.getStartTime( );
+            if ( start_time_t.equals( null ) ) {
+                m.setError( " start_time_t cannot be null " );
+                return j.toJson( m );
             }
-        }
-
-        if(flag == 0 ){
-
-            m.setError( " employee id "+emp_id+" does not exists in pr3044");
-            return j.toJson(m);
-        }
-
-
-        Date current_date = new Date();
-        Calendar c = Calendar.getInstance();
-
-//            Date sdate = new Date(start_time_t.getTime());
-//            Date edate = new Date(end_time_t.getTime());
-//            if(! sdate.equals(edate)){
-//                m.setError( "start date "+sdate+" not equals to end date "+edate);
-//                return j.toJson(m);
-//            }
-
-        c.setTime(start_time_t);
-        c.add(Calendar.HOUR_OF_DAY, 1);
-
-        if(end_time_t.before(start_time_t)){
-            m.setError( "end time should be before start time ");
-            return j.toJson(m);
-        }
-
-        c.setTime(current_date);
-        c.add(Calendar.DATE, -7);
-        if (start_time_t.after(c.getTime()) && start_time_t.before(current_date)) {
-            c.setTime(start_time_t);
-            int week = c.get(Calendar.DAY_OF_WEEK);
-
-            if (week != 1 && week != 7) {
-                c.setTime(end_time_t);
-                int week_e = c.get(Calendar.DAY_OF_WEEK);
-                if (week != 0 && week != 7) {
-                    List<Timecard> timecards1 = data.getAllTimecard(emp_id) ;
-                    start_time_t = timecard.getStartTime();
-                    for(Timecard time : timecards1 ){
-                        if(time.getStartTime() == start_time_t){
-                            m.setError( start_time_t+" already present ");
-                            return j.toJson(m);
-                        }
-                    }
-
-
-
-                    start_time_t =timecard.getStartTime();
-                    end_time_t = timecard.getEndTime();
-
-                    timecard.setEndTime(end_time_t);
-                    timecard.setStartTime(start_time_t);
-                    timecard = data.insertTimecard(timecard);
-                    return j.toJson(timecard);
-
-                }
-                else{
-                    m.setError( " day should not be sunday or saturday ");
-                    return j.toJson(m);
-
-                }
-
-            }
-            else{
-                m.setError( " day should not be sunday or saturday ");
-                return j.toJson(m);
-
+            Timestamp end_time_t = timecard.getEndTime( );
+            if ( end_time_t.equals( null ) ) {
+                m.setError( " end_time_t cannot be null " );
+                return j.toJson( m );
             }
 
+            timecard.setEndTime( end_time_t );
+            timecard.setStartTime( start_time_t );
+            timecard = data.insertTimecard( timecard );
+            return j.toJson( timecard );
+
+        } else {
+
+            return j.toJson( check );
         }
-        else{
-            m.setError( "start_time must be before either equal to current date or  up to 1 week ago from the current date ");
-            return j.toJson(m);
-        }
-
-
-
-
-
-
 
     }
 
@@ -738,120 +809,19 @@ public class CompanyServices {
     ){
 
         try {
-            data = new DataLayer("production");
-
-        List<Employee> emp = data.getAllEmployee("pr3044");
-
-        int flag =0;
-        for(Employee d : emp ){
-            if(d.getId() == emp_id){
-               flag = 1;
+            data = new DataLayer( "production" );
+            if ( timecard_id == 0 ) {
+                m.setError( "timecard_id  cannot be null" );
+                return j.toJson( m );
             }
-        }
+            Timecard timecard = data.getTimecard( timecard_id );
 
-        if(flag == 0 ){
-
-            m.setError( " employee id "+emp_id+" does not exists in pr3044");
-            return j.toJson(m);
-        }
-        try {
-
-            if(timecard_id == 0){
-                m.setError( "timecard_id cannot be 0");
-                return j.toJson(m);
-            }
-
-            Timecard timecard1 = data.getTimecard(timecard_id);
-            if(start_time == null){
-                start_time = timecard1.getStartTime().toString();
-            }
-            if(end_time == null){
-                end_time = timecard1.getStartTime().toString();
-            }
-
-            Timestamp start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
-            Timestamp end_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(end_time).getTime());
-            Date current_date = new Date();
-            Calendar c = Calendar.getInstance();
-
-//            Date sdate = new Date(start_time_t.getTime());
-//            Date edate = new Date(end_time_t.getTime());
-//            if(! sdate.equals(edate)){
-//                m.setError( "start date "+sdate+" not equals to end date "+edate);
-//                return j.toJson(m);
-//            }
-
-            c.setTime(start_time_t);
-             c.add(Calendar.HOUR_OF_DAY, 1);
-
-            if(end_time_t.before(start_time_t)){
-                m.setError( "end time should be before start time ");
-                return j.toJson(m);
-            }
-            c.setTime(current_date);
-            c.add(Calendar.DATE, -7);
-                if (start_time_t.after(c.getTime()) && start_time_t.before(current_date)) {
-                    c.setTime(start_time_t);
-                    int week = c.get(Calendar.DAY_OF_WEEK);
-
-                    if (week != 1 && week != 7) {
-                        c.setTime(end_time_t);
-                        int week_e = c.get(Calendar.DAY_OF_WEEK);
-                        if (week != 0 && week != 7) {
-                            List<Timecard> timecards = data.getAllTimecard(emp_id) ;
-                            start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
-                            for(Timecard time : timecards ){
-                                if(time.getStartTime() == start_time_t){
-                                    m.setError( start_time_t+" already present ");
-                                    return j.toJson(m);
-                                }
-                            }
-
-
-                            if(timecard1 == null){
-                                m.setError( "Please cheack "+timecard_id);
-                                return j.toJson(m);
-                            }
-                            timecard1.setEmpId(emp_id);
-                             start_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(start_time).getTime());
-                             end_time_t = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(end_time).getTime());
-
-                            timecard1.setEndTime(end_time_t);
-                            timecard1.setStartTime(start_time_t);
-                            timecard1 = data.updateTimecard(timecard1);
-                            return j.toJson(timecard1);
-
-
-                        }
-                        else{
-                            m.setError( " day should not be sunday or saturday ");
-                            return j.toJson(m);
-
-                        }
-
-                    }
-                    else{
-                        m.setError( " day should not be sunday or saturday ");
-                        return j.toJson(m);
-
-                    }
-
-                }
-                else{
-                    m.setError( "start_time must be before either equal to current date or  up to 1 week ago from the current date ");
-                    return j.toJson(m);
-                }
-
+            return timecard.getId( ) + "here";
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        return "";
+        return "did not process";
 
     }
 
@@ -876,19 +846,19 @@ public class CompanyServices {
         return j.toJson(m);
     }
 //    public static void main(String args[]) {
-//
-//
+
+
 //         CompanyServices cs = new CompanyServices();
-//        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 12, 2019 11:30:00 AM\",\"end_time\":\"Apr 12, 2019 18:30:00 AM\"}";
+//        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 16, 2019 8:30:00 AM\",\"end_time\":\"Apr 16, 2019 18:30:00 AM\"}";
 //        System.out.println(cs.insertTimecard(jk));
 //         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
 //        System.out.println( cs.insertDepartment(jk));
 //        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
-//        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
+//        System.out.println( cs.updateTimecard(137,263,"2019-04-17 8:30:00","2019-04-17 18:31:00"));
 //
 //       String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
 //        System.out.println(cs.insertEmployee(jk));
-//    }
+    //   }
 
 }
 
