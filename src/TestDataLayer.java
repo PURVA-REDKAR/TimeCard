@@ -18,8 +18,8 @@ public class TestDataLayer {
 //
 //            //Department
 //
-//            // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks
-//            Department dept = new Department("pr3044","CS","3144","rochester");
+            // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks
+//            Department dept = new Department("pr3045","CS","31044","rochester");
 //            dept = dl.insertDepartment(dept);
 //            if (dept.getId() > 0) {
 //                System.out.println("inserted id: "+ dept.getId());
@@ -41,7 +41,7 @@ public class TestDataLayer {
 //            }
 
 //         // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks and department id must exist
-//         Department department = dl.getDepartment("pr3044",298);
+           Department department = dl.getDepartment("pr3045",649);
 //
 //         //Print the department details
 //         System.out.println("\n\nCurrent Department:");
@@ -74,7 +74,7 @@ public class TestDataLayer {
          //Employee
          
 //        // REMEMBER: USE AN ID FOR your department in place of '4' and manager id must exist as an employee
-//         Employee emp = new Employee("purva12","pur34", new java.sql.Date(new java.util.Date().getTime()),"Developer",80000.00, 298, 4);
+//         Employee emp = new Employee("purva12","pur34", new java.sql.Date(new java.util.Date().getTime()),"Developer",80000.00, 649, 4);
 //         emp = dl.insertEmployee(emp);
 //         if (emp.getId() > 0) {
 //            System.out.println("inserted id: "+ emp.getId());
@@ -84,7 +84,7 @@ public class TestDataLayer {
 
 //
 //         // REMEMBER: USE YOUR ID FOR COMPANY IN PLACE OF bdfvks
-//         List<Employee> employees = dl.getAllEmployee("pr3044");
+//         List<Employee> employees = dl.getAllEmployee("pr3045");
 //
 //            for(Employee empl : employees ){
 //                System.out.println(empl.getId());
@@ -144,10 +144,10 @@ public class TestDataLayer {
           Calendar cal = Calendar.getInstance();
           cal.setTimeInMillis(startTime.getTime());
           cal.add(Calendar.HOUR, 5);
-//
-//         //REMBEMBER: employee must exist
+
+         //REMBEMBER: employee must exist
            Timecard tc = new Timecard(startTime,
-                   new Timestamp(cal.getTime().getTime()),263);
+                   new Timestamp(cal.getTime().getTime()),489);
            tc = dl.insertTimecard(tc);
           if (tc.getId() > 0) {
              System.out.println("inserted id: "+ tc.getId());

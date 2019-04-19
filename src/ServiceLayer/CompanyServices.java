@@ -55,25 +55,37 @@ public class CompanyServices {
     @Path("company")
     @DELETE
     @Produces("application/json")
-    @Consumes("text/plain")
     public String deleteCompany(
             @QueryParam("company") String company
-    ) {
+    ){
         dept.setDeptName(company);
-
         try {
+            if(company.equals(null)){
+                m.setError("company cannot be null ");
+                return j.toJson(m);
+            }
             data = new DataLayer("production");
+            //Get all employess to delete that belong to the company
+            List<Employee> employees = data.getAllEmployee(company);
+            for(Employee employe :employees){
+                //Before deleting the employee delete the employess Time card
+                List<Timecard> timecards = data.getAllTimecard(employe.getId());
+                 for(Timecard timecard : timecards){
+                     data.deleteTimecard(timecard.getId());
+                 }
+                 //Delete the Employee
+                data.deleteEmployee(employe.getId());
+            }
+            //Delete the company
             int rows = data.deleteCompany(company);
             if (rows <= 0) {
-
+               //if deletion was not possible
                m.setError( company+" does not exists");
-
-
             }
             else {
+                //if deletion was sucessfull
                 m.setSuccess(company + " information deleted");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -817,13 +829,13 @@ public class CompanyServices {
 //         CompanyServices cs = new CompanyServices();
 //        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 12, 2019 11:30:00 AM\",\"end_time\":\"Apr 12, 2019 18:30:00 AM\"}";
 //        System.out.println(cs.insertTimecard(jk));
-////         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
-//////        System.out.println( cs.insertDepartment(jk));
-//////        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
-//////        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
-//////
-//////        String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
-//////        System.out.println(cs.insertEmployee(jk));
+//         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
+//        System.out.println( cs.insertDepartment(jk));
+//        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
+//        System.out.println( cs.updateTimecard(137,263,"2019-04-15 11:30:00","2019-04-15 18:31:00"));
+//
+//       String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
+//        System.out.println(cs.insertEmployee(jk));
 //    }
 
 }
