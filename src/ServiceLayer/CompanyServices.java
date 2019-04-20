@@ -48,7 +48,13 @@ public class CompanyServices {
     Gson j = new Gson( );
     Message m = new Message( );
 
-
+    /**
+     * Returns Deleted Company
+     * The method delete company along with its employees and their time cards
+     *
+     * @param company query param that contains company if
+     * @return deleted company ID
+     */
     @Path( "company" )
     @DELETE
     @Produces( "application/json" )
@@ -88,6 +94,13 @@ public class CompanyServices {
         return j.toJson( m );
     }
 
+    /**
+     * Returns  department of the Company with dept id
+     *
+     * @param company query param that contains company id
+     * @param dept_id query param that contains department id
+     * @return all department of company  in  JSON FORMART
+     */
     @Path("department")
     @GET
     @Produces("application/json")
@@ -113,16 +126,21 @@ public class CompanyServices {
         //Get Departments
         Department department = data.getDepartment(company,dept_id);
         if(department == null){
-             m.setError( company+" with  department id "+dept_id+" does not exists");
+            m.setError( company+" with  department id "+dept_id+" does not exists");
             return j.toJson( m );
-        }
-        else{
+        } else{
             m.setSuccess( department.toString( ) );
             return j.toJson(department);
         }
 
     }
 
+    /**
+     * Returns All department of the Company
+     *
+     * @param company query param that contains company id
+     * @return all department of company  in  JSON FORMART
+     */
     @Path("departments")
     @GET
     @Produces("application/json")
@@ -144,14 +162,23 @@ public class CompanyServices {
         if(departments.size() == 0){
             m.setError( company+" does not exists");
             return j.toJson(m);
-        }
-        else{
+        } else{
 
             return j.toJson(departments);
         }
 
     }
 
+    /**
+     * Returns updated  department of the Company
+     *
+     * @param dept_id   query param that contains dept id
+     * @param company   query param that contains company id
+     * @param dept_name query param that contains dept name
+     * @param dept_no   query param that contains dept number
+     * @param dept_no   query param that contains Location
+     * @return updated department of company  in  JSON FORMART
+     */
     @Path("department")
     @PUT
     @Produces("application/json")
@@ -178,8 +205,8 @@ public class CompanyServices {
             //GET the department
             Department departments = data.getDepartment(company,dept_id);
             if(departments == null){
-                  m.setError( "department doesnt  exists ");
-                  return j.toJson(m);
+                m.setError( "department doesnt  exists ");
+                return j.toJson(m);
             }
             //set the variable that are required to update
             if ( !dept_name.equals( null ) ) {
@@ -197,18 +224,24 @@ public class CompanyServices {
 
             departments = data.updateDepartment(departments);
             //Check if updation was Success
-           if (departments.getId() > 0) {
+            if (departments.getId() > 0) {
                 return j.toJson(departments);
-           } else {
+            } else {
                 m.setError( "cannot insert ");
                 return j.toJson(m);
-           }
+            }
 
         } catch (Exception e) {
             return "Form Params Missing Exception";
         }
     }
 
+    /**
+     * Returns inserted  department
+     *
+     * @param  department  Json containing Dept informantion
+     * @return inserted department of company  in  JSON FORMART
+     */
     @Path("department")
     @POST
     @Produces("application/json")
@@ -266,7 +299,13 @@ public class CompanyServices {
         m.setError( " did not processs");
         return j.toJson(m);
     }
-
+    /**
+     * Returns inserted  department
+     *
+     * @param  company     comapny id
+     * @param  dept_id     department id
+     * @return deleted  department ID
+     */
     @Path("department")
     @DELETE
     @Produces("application/json")
@@ -300,7 +339,12 @@ public class CompanyServices {
         return j.toJson(m);
     }
 
-
+    /**
+     * Returns employee wiht employee id in @param
+     *
+     * @param  emp_id     employee id
+     * @return Employee informantion in JSON formart
+     */
     @Path("employee")
     @GET
     @Produces("application/json")
@@ -333,12 +377,18 @@ public class CompanyServices {
 
     }
 
-    @Path("employees")
-    @GET
-    @Produces("application/json")
-    public String getAllEmployee(
-            @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company
-    ){
+     /**
+      * Returns employee in comapny
+      *
+      * @param  company    company  id
+      * @return All information of Employee informantion in that company in JSON formart
+      */
+     @Path( "employees" )
+     @GET
+     @Produces( "application/json" )
+     public String getAllEmployee (
+             @DefaultValue( "pr3044" ) @QueryParam( "company" ) String company
+     ){
         try {
             //Initialize Data Layer
             data = new DataLayer("production");
@@ -358,7 +408,47 @@ public class CompanyServices {
 
     }
 
+     /**
+      * checks date is in valid format
+      *
+      * @param  hire_date   Date to be parsed and cheked if its valid
+      * @return true if its valid or return error message
+      */
+     public String DateConversions (String hire_date, Message m1) {
 
+         Date hire_dates = null;
+         Date current_date = null;
+         try {
+             hire_dates = new SimpleDateFormat( "yyyy-MM-dd" ).parse( hire_date );
+         } catch ( ParseException e ) {
+             e.printStackTrace( );
+         }
+
+         current_date = new Date( );
+
+         //check if hire date is after current Date
+         if ( (hire_dates).after( current_date ) ) {
+
+             m1.setError( hire_date + " hire date should be before today's date" );
+             return j.toJson( m1 );
+         }
+         Calendar calendar = Calendar.getInstance( );
+         calendar.setTime( hire_dates );
+         int week = calendar.get( Calendar.DAY_OF_WEEK );
+         if ( week == 1 || week == 7 ) {
+             m1.setError( " cannot be sunday or saturday" );
+             return j.toJson( m1 );
+         }
+         return "true";
+
+     }
+
+    /**
+     * inserts an employee and returns the inserted employee
+     *
+     * @param employee Employee info to be inserted
+     * @return inserted employee in JSON formant
+     */
     @Path("employee")
     @POST
     @Produces("application/json")
@@ -378,90 +468,86 @@ public class CompanyServices {
         //Convert employee to json
         Employee employees = j.fromJson(employee, Employee.class);
         //Validate input
-         String emp_name = employees.getEmpName();
+        String emp_name = employees.getEmpName( );
         if(emp_name == null){
             m.setError( "emp name cannot be null");
             return j.toJson(m);
         }
-         String emp_no = employees.getEmpNo();
-         if(emp_no == null){
-              m.setError( "emp no cannot be null");
-              return j.toJson(m);
-         }
-        //Date Conversions
-         Date hire_dates1 = employees.getHireDate();
-         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-         String hire_date = df.format(hire_dates1);
-
-         String job = employees.getJob();
-         if(job == null){
-              m.setError( "job cannot be null");
-              return j.toJson(m);
-         }
-         Double salary = employees.getSalary();
-         if(salary == 0.00){
-             m.setError( "salary cannot be 0.00");
-             return j.toJson(m);
-         }
-         int dept_id = employees.getDeptId();
-         if(dept_id == 0){
-             m.setError( "dept_id cannot be 0");
-             return j.toJson(m);
-         }
-         int mng_id = employees.getMngId();
-         if(mng_id == 0){
-            m.setError( "mng_id cannot be 0");
-            return j.toJson(m);
-         }
-
-         Department dept = data.getDepartment("pr3044",dept_id);
-         if(dept == null){
-
-             m.setError( "Department with  department id "+dept_id+" does not exists for company pr3044");
-             return j.toJson(m);
-
-         }
-        Employee emp = data.getEmployee(mng_id);
-         if(emp == null){
-             m.setError( "Manager with  employee id "+mng_id+" does not exists");
-             return j.toJson(m);
-         }
-
-
-
-        Date hire_dates = null;
-        Date current_date = null;
-        if(hire_date != null) {
-            try {
-                hire_dates = new SimpleDateFormat("yyyy-MM-dd").parse(hire_date);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-
-            current_date = new Date();
-
-
-            if ((hire_dates).after(current_date)) {
-
-                m.setError(hire_date + " hire date should be before today's date");
-                return j.toJson(m);
-            }
+        String emp_no = employees.getEmpNo( );
+        if ( emp_no == null ) {
+            m.setError( "emp no cannot be null" );
+            return j.toJson( m );
         }
-        else{
+
+        String job = employees.getJob( );
+        if ( job == null ) {
+            m.setError( "job cannot be null" );
+            return j.toJson( m );
+        }
+        Double salary = employees.getSalary( );
+        if ( salary == 0.00 ) {
+            m.setError( "salary cannot be 0.00" );
+            return j.toJson( m );
+        }
+        int dept_id = employees.getDeptId( );
+        if ( dept_id == 0 ) {
+            m.setError( "dept_id cannot be 0" );
+            return j.toJson( m );
+        }
+        int mng_id = employees.getMngId( );
+
+        Department dept = data.getDepartment( "pr3044", dept_id );
+        if ( dept == null ) {
+
+            m.setError( "Department with  department id " + dept_id + " does not exists for company pr3044" );
+            return j.toJson( m );
+
+        }
+        Employee emp = data.getEmployee(mng_id);
+        if ( emp == null ) {
+            m.setError( "Manager with  employee id " + mng_id + " does not exists" );
+            return j.toJson( m );
+        }
+
+
+        //Date Validation
+        Date hire_dates1 = employees.getHireDate( );
+        DateFormat df = new SimpleDateFormat( "yyyy-MM-dd" );
+        String hire_date = df.format( hire_dates1 );
+
+
+        if ( hire_date != null ) {
+
+            String check = DateConversions( hire_date, new Message( ) );
+            if ( !check.equals( "true" ) ) {
+                return j.toJson( check );
+            }
+        } else {
 
             m.setError(" hire date doesnt not exists");
             return j.toJson(m);
         }
         // Insert Employee
-         emp = data.insertEmployee(employees);
+        emp = data.insertEmployee( employees );
         if (emp.getId() > 0) {
-           return j.toJson(emp);
+            return j.toJson( emp );
         } else {
             return j.toJson("error while inserting record");
         }
     }
-
-    @Path("employee")
+    /**
+     *  updates an employee and returns the inserted employee
+     *
+     * @param  emp_id        Employee id to be updated
+     * @param  emp_name      Employee name to be updated
+     * @param  emp_no        Employee no to be updated
+     * @param  hire_date     Employee's hire to be updated
+     * @param  job           Employee job desc to be updated
+     * @param  salary        Employee salary desc to be updated
+     * @param  dept_id       Employee dept id desc to be updated
+     * @return updated employee in JSON formant
+     */
+    @Path( "employee" )
     @PUT
     @Produces("application/json")
     public String UpdateEmployee(
@@ -498,19 +584,13 @@ public class CompanyServices {
                     return j.toJson(m);
                 }
             }
+
             //CHECK Dates
-            Date hire_dates = null;
-            Date current_date = null;
+
             if(hire_date != null) {
-                 hire_dates = new SimpleDateFormat("yyyy-MM-dd").parse(hire_date);
-
-                current_date = new Date();
-
-
-                if ((hire_dates).after(current_date)) {
-
-                    m.setError(hire_date + " hire date should be before today's date");
-                    return j.toJson(m);
+                String check = DateConversions( hire_date, new Message( ) );
+                if ( !check.equals( "true" ) ) {
+                    return j.toJson( check );
                 }
             }
 
@@ -527,18 +607,19 @@ public class CompanyServices {
             if(emp_no != null){
             emp.setEmpNo(emp_no);
             }
-            if(hire_dates != null) {
+            if ( hire_date != null ) {
 
+                Date hire_dates = new SimpleDateFormat( "yyyy-MM-dd" ).parse( hire_date );
                 java.sql.Date sqlDate = new java.sql.Date(hire_dates.getTime());
                 emp.setHireDate(sqlDate);
             }
             if(salary != 0){
              emp.setSalary(salary);
             }
-            if(mng_id != 0) {
-                emp.setMngId(mng_id);
-            }
-            if(dept_id != 0) {
+
+            emp.setMngId( mng_id );
+
+            if ( dept_id != 0 ) {
                 emp.setDeptId(dept_id);
             }
             if(job != null) {
@@ -559,8 +640,13 @@ public class CompanyServices {
         return j.toJson(m);
     }
 
-
-    @Path("employee")
+    /**
+     *  delets an employee and returns deleted employee
+     *
+     * @param  emp_id        Employee id to be updated
+     * @return deleted employee id
+     */
+    @Path( "employee" )
     @DELETE
     @Produces("application/json")
     public String deleteEmployee(
@@ -594,7 +680,13 @@ public class CompanyServices {
 
     }
 
-    @Path("timecards")
+    /**
+     *  all timecard of an employee
+     *
+     * @param  emp_id        Employee id to be updated
+     * @return Employee time card in JSON formant
+     */
+    @Path( "timecards" )
     @GET
     @Produces("application/json")
     @Consumes("text/plain")
@@ -617,8 +709,13 @@ public class CompanyServices {
         }
 
     }
-
-    @Path("timecard")
+    /**
+     *   returns timecard with timecard id
+     *
+     * @param  timecard_id   Timecard id to be updated
+     * @return time card in JSON formant
+     */
+    @Path( "timecard" )
     @GET
     @Produces("application/json")
     @Consumes("text/plain")
@@ -641,6 +738,13 @@ public class CompanyServices {
         }
 
     }
+
+    /**
+     *   parses and validates Timecard
+     *
+     * @param  timecard   Timecard id to be validated
+     * @return true if no error or error message
+     */
 
     public String validateTimecard (Timecard timecard, Message m1) {
 
@@ -749,8 +853,13 @@ public class CompanyServices {
     }
 
 
-
-    @Path("timecard")
+    /**
+     *   parses and validates Timecard
+     *
+     * @param  timecards   Timecard information in json to be inserted
+     * @return Inserted Timecard
+     */
+    @Path( "timecard" )
     @POST
     @Produces("application/json")
     @Consumes("application/json")
@@ -798,8 +907,16 @@ public class CompanyServices {
         }
 
     }
-
-    @Path("timecard")
+    /**
+     * updated and returns updated timecard
+     *
+     * @param  timecard_id   Timecard id
+     * @param  emp_id        employee id
+     * @param  start_time    start time
+     * @param  end_time      end time
+     * @return updated  Timecard
+     */
+    @Path( "timecard" )
     @PUT
     @Produces("application/json")
     public String updateTimecard(
@@ -815,11 +932,13 @@ public class CompanyServices {
                 m.setError( "timecard_id  cannot be null" );
                 return j.toJson( m );
             }
+            //Get time cards
             Timecard timecard = data.getTimecard( timecard_id );
             if ( timecard == null ) {
                 m.setError( "timecard_id  doesnt exists" + timecard_id );
                 return j.toJson( m );
             }
+            //check if start time is null
             if ( !start_time.equals( null ) ) {
                 Timestamp start_time_t = new Timestamp( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( start_time ).getTime( ) );
                 timecard.setStartTime( start_time_t );
@@ -831,7 +950,7 @@ public class CompanyServices {
             if ( emp_id != 0 ) {
                 timecard.setEmpId( emp_id );
             }
-            //  CompanyServices cs = new CompanyServices();
+            //  validate company services
             String check = validateTimecard( timecard, new Message( ) );
             if ( check.equals( "true" ) ) {
                 timecard = data.updateTimecard( timecard );
@@ -852,7 +971,13 @@ public class CompanyServices {
 
     }
 
-    @Path("timecard")
+    /**
+     * Deleted timecard
+     *
+     * @param  timecard_id   Timecard id
+     * @return deletd   Timecard id
+     */
+    @Path( "timecard" )
     @DELETE
     @Produces("application/json")
     public String deleteTimecard(
