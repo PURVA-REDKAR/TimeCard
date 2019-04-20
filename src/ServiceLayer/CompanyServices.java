@@ -769,7 +769,8 @@ public class CompanyServices {
             m.setError( "emp_id  cannot be null" );
             return j.toJson( m );
         }
-        String check = validateTimecard( timecard, new Message( ) );
+        CompanyServices cs = new CompanyServices( );
+        String check = cs.validateTimecard( timecard, new Message( ) );
 
 
         if ( check.equals( "true" ) ) {
@@ -815,8 +816,34 @@ public class CompanyServices {
                 return j.toJson( m );
             }
             Timecard timecard = data.getTimecard( timecard_id );
-
-            return timecard.getId( ) + "here";
+            if ( timecard == null ) {
+                m.setError( "timecard_id  doesnt exists" + timecard_id );
+                return j.toJson( m );
+            }
+            if ( !start_time.equals( null ) ) {
+                Timestamp start_time_t = new Timestamp( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( start_time ).getTime( ) );
+                timecard.setStartTime( start_time_t );
+            }
+            if ( !end_time.equals( null ) ) {
+                Timestamp end_time_t = new Timestamp( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( end_time ).getTime( ) );
+                timecard.setEndTime( end_time_t );
+            }
+            if ( emp_id != 0 ) {
+                timecard.setEmpId( emp_id );
+            }
+            //  CompanyServices cs = new CompanyServices();
+            String check = validateTimecard( timecard, new Message( ) );
+            if ( check.equals( "true" ) ) {
+                timecard = data.updateTimecard( timecard );
+                if ( timecard.equals( null ) ) {
+                    m.setError( "could not update" );
+                    return j.toJson( m );
+                } else {
+                    return j.toJson( timecard );
+                }
+            } else {
+                return j.toJson( check );
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -845,20 +872,7 @@ public class CompanyServices {
 
         return j.toJson(m);
     }
-//    public static void main(String args[]) {
 
-
-//         CompanyServices cs = new CompanyServices();
-//        String jk = "{\"emp_id\":\"263\",\"start_time\":\"Apr 16, 2019 8:30:00 AM\",\"end_time\":\"Apr 16, 2019 18:30:00 AM\"}";
-//        System.out.println(cs.insertTimecard(jk));
-//         String jk = "{\"company\":\"pr3044\",\"dept_name\":\"CSE\",\"dept_no\":\"39444\",\"location\":\"buffalo\"}";
-//        System.out.println( cs.insertDepartment(jk));
-//        System.out.println( cs.UpdateEmployee(261,"frenchs","pr32","2012-12-12","prog",5000.0,298,263));
-//        System.out.println( cs.updateTimecard(137,263,"2019-04-17 8:30:00","2019-04-17 18:31:00"));
-//
-//       String jk = "{\"emp_id\":\"263\",\"emp_name\":\"purva\",\"hire_date\":\"Dec 11, 2012\",\"job\":\"data analyst\",\"salary\":\"1000000\",\"dept_id\":\"298\",\"emp_no\":\"pr34449\",\"mng_id\":\"263\"}";
-//        System.out.println(cs.insertEmployee(jk));
-    //   }
 
 }
 
